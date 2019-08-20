@@ -39,7 +39,8 @@
 #define REALTIME_TOOLS__REALTIME_PUBLISHER_H_
 
 #include <string>
-#include <ros/node_handle.h>
+#include <rclcpp/node.hpp>
+#include <rclcpp/rclcpp.hpp>
 #include <chrono>
 #include <condition_variable>
 #include <memory>
@@ -63,7 +64,7 @@ public:
    * \param queue_size the size of the outgoing ROS buffer
    * \param latched . optional argument (defaults to false) to specify is publisher is latched or not
    */
-  RealtimePublisher(const ros::NodeHandle &node, const std::string &topic, int queue_size, bool latched=false)
+  RealtimePublisher(const  rclcpp::Node::SharedPtr &node, const std::string &topic, int queue_size, bool latched=false)
     : topic_(topic), node_(node), is_running_(false), keep_running_(false), turn_(LOOP_NOT_STARTED)
   {
     construct(queue_size, latched);
@@ -86,7 +87,7 @@ public:
     publisher_.shutdown();
   }
 
-  void init(const ros::NodeHandle &node, const std::string &topic, int queue_size, bool latched=false)
+  void init(const rclcpp::Node::SharedPtr &node, const std::string &topic, int queue_size, bool latched=false)
   {
     topic_ = topic;
     node_ = node;
@@ -219,8 +220,8 @@ private:
   }
 
   std::string topic_;
-  ros::NodeHandle node_;
-  ros::Publisher publisher_;
+  rclcpp::Node::SharedPtr node_;
+  rclcpp::Publisher publisher_;
   volatile bool is_running_;
   volatile bool keep_running_;
 

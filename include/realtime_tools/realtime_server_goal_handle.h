@@ -34,7 +34,8 @@
 #include <memory>
 
 // Actionlib
-#include <actionlib/server/action_server.h>
+
+#include <rcl_action/action_server.h>
 
 namespace realtime_tools
 {

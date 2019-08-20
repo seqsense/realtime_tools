@@ -39,8 +39,7 @@
 #ifndef REALTIME_TOOLS__REALTIME_CLOCK_H_
 #define REALTIME_TOOLS__REALTIME_CLOCK_H_
 
-#include <ros/ros.h>
-
+#include <rclcpp/rclcpp.hpp>
 #include <mutex>
 #include <thread>
 
@@ -53,16 +52,16 @@ class RealtimeClock
   RealtimeClock();
   ~RealtimeClock();
 
-  ros::Time getSystemTime(const ros::Time& realtime_time);
+  rclcpp::Time getSystemTime(const rclcpp::Time& realtime_time);
   void loop();
 
 
  private:
   unsigned int lock_misses_ = 0;
-  ros::Time system_time_;
-  ros::Duration clock_offset_;
+  rclcpp::Time system_time_;
+  rclcpp::Duration clock_offset_;
 
-  ros::Time last_realtime_time_;
+  rclcpp::Time last_realtime_time_;
   bool running_ = false;
   bool initialized_ = false;
   std::mutex mutex_;

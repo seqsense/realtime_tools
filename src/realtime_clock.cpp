@@ -37,6 +37,7 @@
  */
 
 #include <realtime_tools/realtime_clock.h>
+#include <rclcpp/time.hpp>
 #include <chrono>
 
 namespace realtime_tools
@@ -58,18 +59,18 @@ namespace realtime_tools
 
 
 
-  ros::Time RealtimeClock::getSystemTime(const ros::Time& realtime_time)
+  rclcpp::Time RealtimeClock::getSystemTime(const rclcpp::Time& realtime_time)
   {
     std::unique_lock<std::mutex> guard(mutex_, std::try_to_lock);
     if (guard.owns_lock())
     {
       // update time offset when we have a new system time measurement in the last cycle
-      if (lock_misses_ == 0 && system_time_ != ros::Time())
+      if (lock_misses_ == 0 && system_time_ != rclcpp::Time())
       {
 	// get additional offset caused by period of realtime loop
-	ros::Duration period_offset;
-	if (last_realtime_time_ != ros::Time())
-	  period_offset = ros::Duration((realtime_time - last_realtime_time_).toSec()/2.0);
+	rclcpp::Duration period_offset;
+	if (last_realtime_time_ != rclcpp::Time())
+	  period_offset = rclcpp::Duration((realtime_time - last_realtime_time_).toSec()/2.0);
 
 	if (!initialized_)
         {
@@ -79,7 +80,7 @@ namespace realtime_tools
 	else
 	  clock_offset_ = clock_offset_*0.9999 + (system_time_ + period_offset - realtime_time)*0.0001;
       }
-      system_time_ = ros::Time();
+      system_time_ = rclcpp::Time();
       lock_misses_ = 0;
     }
 	
@@ -96,7 +97,7 @@ namespace realtime_tools
 
   void RealtimeClock::loop()
   {
-    ros::Rate r(750);
+    rclcpp::Rate r(750);
     while (running_)
     {
 #ifdef NON_POLLING
@@ -110,7 +111,7 @@ namespace realtime_tools
 #endif
 
       // store system time
-      system_time_ = ros::Time::now();
+      system_time_ = rclcpp::Time::now();
       
       // warning, using non-locked 'lock_misses_', but it's just for debugging
       if (lock_misses_ > 100)

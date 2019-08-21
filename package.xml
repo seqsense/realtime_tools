@@ -1,4 +1,4 @@
-<package format="2">
+<package format="3">
   <name>realtime_tools</name>
   <version>1.15.0</version>
   <description>Contains a set of tools that can be used from a hard
@@ -14,13 +14,17 @@
 
   <author email="sglaser@willowgarage.com">Stuart Glaser</author>
 
-  <buildtool_depend>catkin</buildtool_depend>
+  <buildtool_depend>ament_cmake</buildtool_depend>
 
-  <depend>roscpp</depend>
+  <depend>rclcpp</depend>
+
+  <build_depend>rclcpp_lifecycle</build_depend>
 
   <build_export_depend>actionlib</build_export_depend>
 
-  <test_depend>rosunit</test_depend>
-  <test_depend>rostest</test_depend>
   <test_depend>actionlib</test_depend>
+  <test_depend>ament_cmake_gtest</test_depend>
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+  
 </package>

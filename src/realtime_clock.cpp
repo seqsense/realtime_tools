@@ -37,15 +37,28 @@
  */
 
 #include <realtime_tools/realtime_clock.h>
-#include <rclcpp/time.hpp>
 #include <chrono>
+
+#include <rclcpp/logging.hpp>
+#include <rclcpp/rate.hpp>
 
 namespace realtime_tools
 {
 
-  
   RealtimeClock::RealtimeClock()
-    : running_(true),
+    : RealtimeClock(nullptr, rclcpp::get_logger("realtime_tools"))
+  {
+  }
+
+  RealtimeClock::RealtimeClock(rclcpp::Clock::SharedPtr clock)
+    : RealtimeClock(clock, rclcpp::get_logger("realtime_tools"))
+  {
+  }
+
+  RealtimeClock::RealtimeClock(rclcpp::Clock::SharedPtr clock, rclcpp::Logger logger)
+    : clock_(clock),
+     logger_(logger),
+     running_(true),
      thread_(std::thread(&RealtimeClock::loop, this))
   {
   }
@@ -53,14 +66,19 @@ namespace realtime_tools
 
   RealtimeClock::~RealtimeClock()
   {
-    running_ = false;
-    thread_.join();
+    if (thread_.joinable()) {
+      running_ = false;
+      thread_.join();
+    }
   }
 
-
-
-  rclcpp::Time RealtimeClock::getSystemTime(const rclcpp::Time& realtime_time)
+  rclcpp::Time RealtimeClock::now(const rclcpp::Time& realtime_time)
   {
+    // Default constructed or given invalid clock, so return zero
+    if (!clock_) {
+      return rclcpp::Time();
+    }
+
     std::unique_lock<std::mutex> guard(mutex_, std::try_to_lock);
     if (guard.owns_lock())
     {
@@ -68,9 +86,9 @@ namespace realtime_tools
       if (lock_misses_ == 0 && system_time_ != rclcpp::Time())
       {
 	// get additional offset caused by period of realtime loop
-	rclcpp::Duration period_offset;
+	rclcpp::Duration period_offset(0);
 	if (last_realtime_time_ != rclcpp::Time())
-	  period_offset = rclcpp::Duration((realtime_time - last_realtime_time_).toSec()/2.0);
+	  period_offset = (realtime_time - last_realtime_time_) * 0.5;
 
 	if (!initialized_)
         {
@@ -111,11 +129,15 @@ namespace realtime_tools
 #endif
 
       // store system time
-      system_time_ = rclcpp::Time::now();
+      system_time_ = clock_->now();
       
       // warning, using non-locked 'lock_misses_', but it's just for debugging
-      if (lock_misses_ > 100)
-	ROS_WARN_THROTTLE(1.0, "Time estimator has trouble transferring data between non-RT and RT");
+      if (lock_misses_ > 100) {
+        static rclcpp::Time last_warn_time = system_time_;
+        if ((system_time_ - last_warn_time).seconds() > 1.0) {
+          RCLCPP_WARN(logger_, "Time estimator has trouble transferring data between non-RT and RT");
+        }
+      }
 
       // release lock
       guard.unlock();
